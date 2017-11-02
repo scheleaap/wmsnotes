@@ -51,6 +51,24 @@ class NotebookStorage:
         """
         raise NotImplementedError(self.has_node.__name__)
 
+    def set_node_payload(self, node_id, payload_name, payload_file):
+        """Sets a payload for a node.
+
+        @param node_id: The id of the node.
+        @param payload_name: The name of the new payload. Must be unique for the node.
+        @param payload_file: A file-like object with the payload data.
+        @raise NodeDoesNotExistError: If a node with the id does not exist.
+        """
+        raise NotImplementedError(self.set_node_payload.__name__)
+
 
 class NodeDoesNotExistError(Exception):
+    pass
+
+
+class ParseError(Exception):
+    pass
+
+
+class PayloadDoesNotExistError(Exception):
     pass

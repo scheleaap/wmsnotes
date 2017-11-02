@@ -15,6 +15,18 @@ class NodeCreated(object):
         return '{cls}[{node}]'.format(cls=self.__class__.__name__, **self.__dict__)
 
 
+class NodePayloadChanged(object):
+    def __init__(self, node_id: str, new_payload: str):
+        self.node_id = node_id
+        self.new_payload = new_payload
+
+    def __repr__(self):
+        return '{cls}[{node_id}, new payload length={len}]'.format(
+            cls=self.__class__.__name__,
+            len=len(self.new_payload),
+            **self.__dict__)
+
+
 class FolderPath(object):
     @staticmethod
     def from_string(string_path: str):
@@ -81,17 +93,20 @@ class NotebookNode(object):
     def folder_path(self):
         return self._folder_path
 
-    @folder_path.setter
-    def folder_path(self, folder_path):
-        self._folder_path = folder_path
+    # @folder_path.setter
+    # def folder_path(self, folder_path):
+    #     self._folder_path = folder_path
 
     @property
     def title(self):
         return self._title
 
-    @title.setter
-    def title(self, title):
-        self._title = title
+    # @title.setter
+    # def title(self, title):
+    #     self._title = title
+
+    def set_payload(self, payload) -> NodePayloadChanged:
+        return NodePayloadChanged(self.node_id, payload)
 
     def __repr__(self):
         return '{cls}[id={_node_id}, folder={_folder_path}, title={_title}]'.format(

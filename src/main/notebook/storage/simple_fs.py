@@ -50,8 +50,9 @@ class SimpleFileSystemStorage(NotebookStorage):
 
         return self._read_node(node_id)
 
-    # def _get_node_directory_path(self, node_id):
-    #     return os.path.join(self.dir, node_id)
+    def _get_node_directory_path(self, node_id):
+        # return os.path.join(self.dir, node_id)
+        return os.path.join(self.dir, os.path.dirname(node_id))
 
     def _get_node_file_path(self, node_id):
         return os.path.normpath(os.path.join(self.dir, node_id))
@@ -67,6 +68,10 @@ class SimpleFileSystemStorage(NotebookStorage):
         #     raise PayloadDoesNotExistError(node_id, payload_name)
 
         return io.open(self._get_node_payload_file_path(node_id, payload_name), mode='rb')
+
+    def _get_node_payload_directory_path(self, node_id):
+        # return os.path.join(self.dir, node_id, 'payload')
+        return self._get_node_directory_path(node_id)
 
     def _get_node_payload_file_path(self, node_id, payload_name):
         # return os.path.join(self.dir, node_id, 'payload', payload_name)
@@ -90,6 +95,24 @@ class SimpleFileSystemStorage(NotebookStorage):
             node_id=node_id,
             title=title,
             folder_path=FolderPath.from_string(path))
+
+    def set_node_payload(self, node_id, payload_name, payload_file):
+        self.log.debug(u'Storing payload "{name}" to node {node_id}'.format(node_id=node_id, name=payload_name))
+        if not self.has_node(node_id):
+            raise NodeDoesNotExistError(node_id)
+
+        directory_path = self._get_node_payload_directory_path(node_id)
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+
+        with io.open(self._get_node_payload_file_path(node_id, payload_name), mode='wb') as f:
+            data = payload_file.read()
+            f.write(data)
+            payload_hash = hashlib.md5(data).hexdigest()
+
+        # stored_node = self.get_node(node_id)
+        # stored_node.payloads.append(StoredNodePayload(payload_name, payload_hash))
+        # self._write_node(node_id, stored_node)
 
     def __repr__(self):
         return '{cls}[{dir}]'.format(cls=self.__class__.__name__, **self.__dict__)

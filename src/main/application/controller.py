@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from collections import namedtuple
+import io
 
 import cyrusbus.bus
 
@@ -29,19 +29,36 @@ class Controller(object):
         for node in self.notebook_storage.get_all_nodes():  # type: NotebookNode
             self.bus.publish(NODE_EVENTS_TOPIC, node.create())
 
+    def publish_node_event(self, event):
+        if event is not None:
+            self.bus.publish(NODE_EVENTS_TOPIC, event)
+
     def set_open_node(self, node_id: str):
-        """
-        Sets the currently open node.
+        """Sets the currently open node.
 
         @param node_id: The id of the node that should be open. May be None to indicate the currently open node should be closed.
         """
         if node_id is not None:
             node = self.notebook_storage.get_node(node_id)
-            payload_file = self.notebook_storage.get_node_payload(node_id, None)
+            payload_file = self.notebook_storage.get_node_payload(node_id, 'main')
             try:
-                payload = str(payload_file.read(), 'utf-8')
+                payload = str(payload_file.read(), encoding='utf-8')
             finally:
                 payload_file.close()
             self.bus.publish(APPLICATION_TOPIC, OpenNodeChanged(node, payload))
         else:
             self.bus.publish(APPLICATION_TOPIC, OpenNodeChanged(None, None))
+
+    def update_node_payload(self, node_id: str, payload: str):
+        """Updates the payload of a node.
+
+        @param node_id: The id of the note to update.
+        @param payload: The new payload.
+        """
+        node = self.notebook_storage.get_node(node_id)
+        event = node.set_payload(payload)
+        self.publish_node_event(event)
+
+        # TODO: This should be done by another class reacting to the event
+        if event is not None:
+            self.notebook_storage.set_node_payload(node_id, 'main', io.BytesIO(bytes(payload, encoding='utf-8')))

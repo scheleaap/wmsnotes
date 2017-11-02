@@ -54,24 +54,23 @@ class App(Gtk.Application):
             # Windows are associated with the application
             # when the last one is closed the application shuts down
             self.initialize_builder()
-            # self.builder.connect_signals(EventHandler())
-            self.builder.connect_signals({
-                'on_load_button_clicked': self.load,
-            })
+            # self.builder.connect_signals({
+            #     'on_load_button_clicked': self.load,
+            # })
 
             self.initialize_tree_view()
             self.initialize_source_view()
-            self.webview = WebKit2.WebView()
-            # settings = self.webview.get_settings()
-            # print(settings)
-            # settings.set_allow_universal_access_from_file_urls(True)
-            # settings.set_property('allow-file-access-from-file-urls', True)
-            box = self.builder.get_object('split_pane2')
-            box.add2(self.webview)
+            # self.webview = WebKit2.WebView()
+            # box = self.builder.get_object('split_pane2')
+            # box.add2(self.webview)
 
-            self.window = self.builder.get_object('main-window')
+            self.window = self.builder.get_object('main-window')  # type: Gtk.ApplicationWindow
             self.window.show_all()
             self.add_window(self.window)
+
+            self.window.set_focus(self.builder.get_object('tree_view'))
+
+            self.load()
 
         self.window.present()
 
@@ -83,9 +82,14 @@ class App(Gtk.Application):
         language_manager = GtkSource.LanguageManager.get_default()
         markdown_language = language_manager.get_language('markdown')
         source_view = self.builder.get_object('source_view')  # type: GtkSource.View
-        buffer = ui.sourceview.ContentNodeSourceBuffer(self.bus, self.notebook_storage)
-        source_view.set_buffer(buffer)
+        buffer = source_view.get_buffer()
         buffer.set_language(markdown_language)
+        ui.sourceview.SourceHandler(
+            bus=self.bus,
+            controller=self.controller,
+            notebook_storage=self.notebook_storage,
+            source_view=source_view
+        )
 
     def initialize_tree_view(self):
         tree_store = ui.treeview.NotebookTreeStore(self.bus)
@@ -106,19 +110,17 @@ class App(Gtk.Application):
     def load(self, *args, **kwargs):
         self.controller.load_notebook()
 
-    def load_individual_node(self):
-        with io.open('Kaas.md', encoding='utf8') as f:
-            data = f.read()
-        source_view = self.builder.get_object('source_view')
-        source_view.get_buffer().set_text(data)
-        html = markdown.markdown(
-            data,
-            tab_length=2,
-            extensions=[GithubExtension(), SaneListExtension(), TocExtension()],
-            output_format='html5',
-        )
-        # self.webview.load_uri('file:///D:/Users/Wout/Programma\'s/Python/test/test.html')
-        self.webview.load_html(html, base_uri='file:///D:/Users/Wout/Programma\'s/Python/test/')
+        # def load_individual_node(self):
+        #     data = 'bla'
+        #
+        #     html = markdown.markdown(
+        #         data,
+        #         tab_length=2,
+        #         extensions=[GithubExtension(), SaneListExtension(), TocExtension()],
+        #         output_format='html5',
+        #     )
+        #     # self.webview.load_uri('file:///D:/Users/Wout/Programma\'s/Python/test/test.html')
+        #     self.webview.load_html(html, base_uri='file:///D:/Users/Wout/Programma\'s/Python/test/')
 
 
 if __name__ == '__main__':

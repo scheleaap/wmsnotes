@@ -142,9 +142,9 @@ class NotebookTreeViewHandler(object):
         self.controller = controller
         # self.tree_store = tree_store
         self.tree_view = tree_view
-        # bus.subscribe(APPLICATION_TOPIC, self.on_application_event)
 
         self.tree_view.get_selection().connect('changed', self.on_selection_changed)
+        # bus.subscribe(APPLICATION_TOPIC, self.on_application_event)
 
     # def on_application_event(self, bus, event, *args, **kwargs):
     #     self.log.debug(u'Event received: {event}'.format(event=event))
@@ -158,5 +158,8 @@ class NotebookTreeViewHandler(object):
     def on_selection_changed(self, tree_selection: Gtk.TreeSelection):
         self.log.debug(u'Selection changed')
         (tree_model, iter) = tree_selection.get_selected()  # type: NotebookTreeStore, Gtk.TreeIter
-        node_id = tree_model.get_node_id_from_iter(iter)
+        if iter is not None:
+            node_id = tree_model.get_node_id_from_iter(iter)
+        else:
+            node_id = None
         self.controller.set_open_node(node_id)

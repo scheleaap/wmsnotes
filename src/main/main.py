@@ -20,6 +20,7 @@ from application.controller import Controller
 from notebook.storage.simple_fs import SimpleFileSystemStorage
 import ui.sourceview
 import ui.treeview
+import ui.window
 
 
 def initialize_logging():
@@ -69,6 +70,7 @@ class App(Gtk.Application):
             self.add_window(self.window)
 
             self.window.set_focus(self.builder.get_object('tree_view'))
+            ui.window.MainWindowHandler(self.bus, self.window)
 
             self.load()
 

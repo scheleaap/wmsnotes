@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from .event import Event
+from collections import namedtuple
 
 __all__ = [
     'NotebookNode',
 ]
 
 
-class NodeCreated(Event):
+class NodeCreated(object):
     def __init__(self, node):
         self.node = node  # type: NotebookNode
 
     def __repr__(self):
-        return '{cls}[{node}]'.format(
-            cls=self.__class__.__name__,
-            **self.__dict__
-        )
+        return '{cls}[{node}]'.format(cls=self.__class__.__name__, **self.__dict__)
 
 
 class FolderPath(object):

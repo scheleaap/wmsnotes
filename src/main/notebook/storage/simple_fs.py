@@ -22,7 +22,7 @@ class SimpleFileSystemStorage(NotebookStorage):
 
         @param dir: The path to the directory to store notes in.
         """
-        self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__));
+        self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__))
         self.dir = dir
 
         self.log.debug(u'dir={0}'.format(self.dir))
@@ -58,6 +58,19 @@ class SimpleFileSystemStorage(NotebookStorage):
 
     # def _get_notebook_file_path(self):
     #     return os.path.join(self.dir, 'notebook.xml')
+
+    def get_node_payload(self, node_id, payload_name):
+        self.log.debug(u'Loading payload "{name}" of node {node_id}'.format(node_id=node_id, name=payload_name))
+        if not self.has_node(node_id):
+            raise NodeDoesNotExistError(node_id)
+        # if not self.has_node_payload(node_id, payload_name):
+        #     raise PayloadDoesNotExistError(node_id, payload_name)
+
+        return io.open(self._get_node_payload_file_path(node_id, payload_name), mode='rb')
+
+    def _get_node_payload_file_path(self, node_id, payload_name):
+        # return os.path.join(self.dir, node_id, 'payload', payload_name)
+        return self._get_node_file_path(node_id)
 
     def has_node(self, node_id):
         return os.path.exists(self._get_node_file_path(node_id))

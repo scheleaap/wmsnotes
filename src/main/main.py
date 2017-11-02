@@ -16,8 +16,10 @@ from markdown.extensions.toc import TocExtension
 from markdown.extensions.sane_lists import SaneListExtension
 from pymdownx.github import GithubExtension
 
+from application.controller import Controller
 from notebook.storage.simple_fs import SimpleFileSystemStorage
-from notebook.controller import Controller
+import ui.sourceview
+import ui.treeview
 
 
 def initialize_logging():
@@ -37,6 +39,8 @@ class App(Gtk.Application):
                          **kwargs)
         GObject.type_register(GtkSource.View)
         self.bus = cyrusbus.bus.Bus()
+        self.notebook_storage = SimpleFileSystemStorage('resources/notebook')
+        self.controller = Controller(self.notebook_storage, self.bus)
         self.builder = None  # type: Gtk.Builder
         self.window = None  # type: Gtk.ApplicationWindow
         self.webview = None  # type: WebKit2.WebView
@@ -73,21 +77,18 @@ class App(Gtk.Application):
 
     def initialize_builder(self):
         self.builder = Gtk.Builder()
-        self.builder.add_from_file('resources/test.glade')
+        self.builder.add_from_file('resources/glade/ui.xml')
 
     def initialize_source_view(self):
         language_manager = GtkSource.LanguageManager.get_default()
         markdown_language = language_manager.get_language('markdown')
-        source_view = self.builder.get_object('source_view')
-        buffer = source_view.get_buffer()
+        source_view = self.builder.get_object('source_view')  # type: GtkSource.View
+        buffer = ui.sourceview.ContentNodeSourceBuffer(self.bus, self.notebook_storage)
+        source_view.set_buffer(buffer)
         buffer.set_language(markdown_language)
 
     def initialize_tree_view(self):
-        import ui.treeview
         tree_store = ui.treeview.NotebookTreeStore(self.bus)
-        # i1 = tree_store.append(None, ['hoi'])  # type: Gtk.TreeIter
-        # i2 = tree_store.insert(None, 0, ['doei'])
-        # tree_store.insert(i1, 0, ['bla'])
 
         tree_view = self.builder.get_object('tree_view')  # type: Gtk.TreeView
         renderer = Gtk.CellRendererText()
@@ -96,9 +97,14 @@ class App(Gtk.Application):
 
         tree_view.set_model(tree_store)
 
+        ui.treeview.NotebookTreeViewHandler(
+            bus=self.bus,
+            controller=self.controller,
+            tree_store=tree_store,
+            tree_view=tree_view)
+
     def load(self, *args, **kwargs):
-        c = Controller(SimpleFileSystemStorage('resources/notebook'), self.bus)
-        c.load_notebook()
+        self.controller.load_notebook()
 
     def load_individual_node(self):
         with io.open('Kaas.md', encoding='utf8') as f:

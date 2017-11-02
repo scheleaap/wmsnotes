@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from notebook.aggregate import NotebookNode
 
 __all__ = [
     'NotebookStorage',
@@ -19,7 +20,7 @@ class NotebookStorage:
         """
         raise NotImplementedError(self.get_all_nodes.__name__)
 
-    def get_node(self, node_id):
+    def get_node(self, node_id) -> NotebookNode:
         """Loads the metadata of a node in the notebook.
 
         @param node_id: The id of the node to be read.
@@ -29,6 +30,18 @@ class NotebookStorage:
         @raise ParseError: If the file has an invalid syntax.
         """
         raise NotImplementedError(self.get_node.__name__)
+
+    def get_node_payload(self, node_id, payload_name):
+        """Loads a payload of a node in the notebook.
+
+        @param node_id: The id of the node.
+        @param payload_name: The name of the payload.
+        @return: A file-like object with the payload data.
+        @raise NodeDoesNotExistError: If a node with the id does not exist.
+        @raise PayloadDoesNotExistError: If a payload with the name does not exist.
+        @raise IOError: If the payload cannot be read.
+        """
+        raise NotImplementedError(self.get_node_payload.__name__)
 
     def has_node(self, node_id):
         """Returns whether a node exists within the notebook.

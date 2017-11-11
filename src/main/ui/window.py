@@ -4,7 +4,7 @@ import cyrusbus
 from gi.repository import Gtk
 
 import application.event
-from application.controller import OpenNodeChanged
+from application.controller import NoteOpened
 
 
 class MainWindowHandler(object):
@@ -24,7 +24,7 @@ class MainWindowHandler(object):
     def on_application_event(self, bus, event):
         self.log.debug(u'Event received: {event}'.format(event=event))
 
-        if isinstance(event, OpenNodeChanged):  # type: OpenNodeChanged
+        if isinstance(event, NoteOpened):  # type: NoteOpened
             if event.node is not None:
                 self.window.set_title('WMS Notes - {title}'.format(title=event.node.title))
             else:

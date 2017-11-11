@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# TODO: Rename to "Note"
 
 from collections import namedtuple
 
@@ -7,7 +8,7 @@ __all__ = [
 ]
 
 
-class NodeCreated(object):
+class NoteCreated(object):
     def __init__(self, node):
         self.node = node  # type: NotebookNode
 
@@ -15,7 +16,7 @@ class NodeCreated(object):
         return '{cls}[{node}]'.format(cls=self.__class__.__name__, **self.__dict__)
 
 
-class NodePayloadChanged(object):
+class NotePayloadChanged(object):
     def __init__(self, node_id: str, new_payload: str):
         self.node_id = node_id
         self.new_payload = new_payload
@@ -64,6 +65,7 @@ class NotebookNode(object):
     @ivar node_id: The id of the node.
     @ivar title: The title of the node.
     @ivar folder_path: The path of the node's folder.
+    @ivar payload: The payload of the node.
     """
 
     def __init__(
@@ -71,19 +73,22 @@ class NotebookNode(object):
             node_id: str,
             title: str,
             folder_path: FolderPath,
+            payload: str = None,
     ):
         """Constructor.
 
         @param node_id: See the class documentation.
         @param title: See the class documentation.
         @param folder_path: See the class documentation.
+        @param payload: See the class documentation.
         """
         self._title = title
         self._node_id = node_id
         self._folder_path = folder_path
+        self._payload = payload
 
-    def create(self) -> NodeCreated:
-        return NodeCreated(self)
+    def create(self) -> NoteCreated:
+        return NoteCreated(self)
 
     @property
     def node_id(self):
@@ -105,11 +110,17 @@ class NotebookNode(object):
     # def title(self, title):
     #     self._title = title
 
-    def set_payload(self, payload) -> NodePayloadChanged:
-        return NodePayloadChanged(self.node_id, payload)
+    @property
+    def payload(self):
+        return self._payload
+
+    def set_payload(self, payload) -> NotePayloadChanged:
+        self._payload = payload
+        return NotePayloadChanged(self.node_id, payload)
 
     def __repr__(self):
-        return '{cls}[id={_node_id}, folder={_folder_path}, title={_title}]'.format(
+        return '{cls}[id={_node_id}, folder={_folder_path}, title={_title}, payload={payload_length}]'.format(
             cls=self.__class__.__name__,
+            payload_length=len(self.payload) if self.payload is not None else 'N/A',
             **self.__dict__
         )

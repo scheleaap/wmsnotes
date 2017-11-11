@@ -5,9 +5,9 @@ import logging
 import cyrusbus
 from gi.repository import Gtk
 
-from application.controller import OpenNodeChanged, Controller
+from application.controller import NoteOpened, Controller
 from application.event import APPLICATION_TOPIC, NODE_EVENTS_TOPIC
-from notebook.aggregate import NodeCreated, FolderPath, NotebookNode
+from notebook.aggregate import NoteCreated, FolderPath, NotebookNode
 
 __all__ = [
     'NotebookTreeStore',
@@ -108,15 +108,15 @@ class NotebookTreeStore(Gtk.TreeStore):
     def on_event(self, bus, event, *args, **kwargs):
         self.log.debug(u'Event received: {event}'.format(event=event))
 
-        if isinstance(event, NodeCreated):  # type: NodeCreated
-            NodeCreatedHandler.handle(self, event)
+        if isinstance(event, NoteCreated):  # type: NoteCreated
+            NoteCreatedHandler.handle(self, event)
         else:
             self.log.debug(u'Unhandled event: {event}'.format(event=event))
 
 
-class NodeCreatedHandler(object):
+class NoteCreatedHandler(object):
     @staticmethod
-    def handle(tree_store: NotebookTreeStore, event: NodeCreated):
+    def handle(tree_store: NotebookTreeStore, event: NoteCreated):
         parent_iter = tree_store.ensure_folder_exists_and_return_iter(
             NotebookTreeStore.get_path_elements_for_folder_node_from_notebook_node(event.node))
         tree_store.append(
@@ -149,7 +149,7 @@ class NotebookTreeViewHandler(object):
     # def on_application_event(self, bus, event, *args, **kwargs):
     #     self.log.debug(u'Event received: {event}'.format(event=event))
     #
-    #     if isinstance(event, OpenNodeChanged):  # type: OpenNodeChanged
+    #     if isinstance(event, NoteOpened):  # type: NoteOpened
     #         self.tree_store.get_iter_from_path_elements(
     #             NotebookTreeStore.get_path_elements_for_content_node_from_notebook_node(event.node))
     #     else:

@@ -4,7 +4,7 @@ import cyrusbus
 from gi.repository import GtkSource
 
 import application.event
-from application.controller import OpenNodeChanged, Controller
+from application.controller import NoteOpened, Controller
 from notebook.storage import NotebookStorage
 
 
@@ -18,12 +18,10 @@ class SourceHandler(object):
             self,
             bus: cyrusbus.bus.Bus,
             controller: Controller,
-            notebook_storage: NotebookStorage,
             source_view: GtkSource.View,
     ):
         self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__))
         self.controller = controller
-        self.notebook_storage = notebook_storage
         self.source_view = source_view
         self.source_buffer = source_view.get_buffer()  # type: GtkSource.Buffer
         self.current_node_id = None
@@ -34,7 +32,7 @@ class SourceHandler(object):
     def on_application_event(self, bus, event):
         self.log.debug(u'Event received: {event}'.format(event=event))
 
-        if isinstance(event, OpenNodeChanged):  # type: OpenNodeChanged
+        if isinstance(event, NoteOpened):  # type: NoteOpened
             with self.source_buffer.handler_block(self._on_buffer_changed_handler_id):
                 if event.node is not None:
                     self.current_node_id = event.node.node_id

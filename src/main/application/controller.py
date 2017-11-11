@@ -4,11 +4,12 @@ import io
 import cyrusbus.bus
 
 from notebook.aggregate import NotebookNode
-from notebook.storage import NotebookStorage
+from notebook.dao import NoteRepository
+from notebook.dao.delayed_persist import DelayedPersistNoteRepository
 from .event import NODE_EVENTS_TOPIC, APPLICATION_TOPIC
 
 
-class OpenNodeChanged(object):
+class NoteOpened(object):
     def __init__(self, node: NotebookNode, payload: str):
         self.node = node
         self.payload = payload
@@ -21,17 +22,21 @@ class OpenNodeChanged(object):
 
 
 class Controller(object):
-    def __init__(self, notebook_storage: NotebookStorage, bus: cyrusbus.bus.Bus):
+    def __init__(self, note_repository: DelayedPersistNoteRepository, bus: cyrusbus.bus.Bus):
         self.bus = bus
-        self.notebook_storage = notebook_storage
+        self.note_repository = note_repository
 
     def load_notebook(self):
-        for node in self.notebook_storage.get_all_nodes():  # type: NotebookNode
+        for node in self.note_repository.get_all_nodes():  # type: NotebookNode
             self.bus.publish(NODE_EVENTS_TOPIC, node.create())
 
     def publish_node_event(self, event):
         if event is not None:
             self.bus.publish(NODE_EVENTS_TOPIC, event)
+
+    def save(self):
+        """Saves unsaved changes."""
+        self.note_repository.persist()
 
     def set_open_node(self, node_id: str):
         """Sets the currently open node.
@@ -39,15 +44,11 @@ class Controller(object):
         @param node_id: The id of the node that should be open. May be None to indicate the currently open node should be closed.
         """
         if node_id is not None:
-            node = self.notebook_storage.get_node(node_id)
-            payload_file = self.notebook_storage.get_node_payload(node_id, 'main')
-            try:
-                payload = str(payload_file.read(), encoding='utf-8')
-            finally:
-                payload_file.close()
-            self.bus.publish(APPLICATION_TOPIC, OpenNodeChanged(node, payload))
+            node = self.note_repository.get_node(node_id)
+            self.bus.publish(APPLICATION_TOPIC, NoteOpened(node, node.payload))
         else:
-            self.bus.publish(APPLICATION_TOPIC, OpenNodeChanged(None, None))
+            # TODO: Replace with different event
+            self.bus.publish(APPLICATION_TOPIC, NoteOpened(None, None))
 
     def update_node_payload(self, node_id: str, payload: str):
         """Updates the payload of a node.
@@ -55,10 +56,10 @@ class Controller(object):
         @param node_id: The id of the note to update.
         @param payload: The new payload.
         """
-        node = self.notebook_storage.get_node(node_id)
+        node = self.note_repository.get_node(node_id)
         event = node.set_payload(payload)
         self.publish_node_event(event)
 
         # TODO: This should be done by another class reacting to the event
         if event is not None:
-            self.notebook_storage.set_node_payload(node_id, 'main', io.BytesIO(bytes(payload, encoding='utf-8')))
+            self.note_repository.add_or_update_node(node)

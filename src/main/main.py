@@ -7,6 +7,10 @@ import sys
 import cyrusbus
 import gi
 
+from notebook.dao.delayed_persist import DelayedPersistNoteRepository
+from notebook.dao.mem import InMemoryNoteRepository
+from notebook.dao.storage import StorageNoteRepository
+
 gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0')
 gi.require_version('WebKit2', '3.0')
@@ -40,8 +44,12 @@ class App(Gtk.Application):
                          **kwargs)
         GObject.type_register(GtkSource.View)
         self.bus = cyrusbus.bus.Bus()
-        self.notebook_storage = SimpleFileSystemStorage('resources/notebook')
-        self.controller = Controller(self.notebook_storage, self.bus)
+        # self.note_repository = InMemoryNoteRepository()
+        self.note_repository = DelayedPersistNoteRepository(
+            InMemoryNoteRepository(),
+            StorageNoteRepository(SimpleFileSystemStorage('resources/notebook')),
+        )
+        self.controller = Controller(self.note_repository, self.bus)
         self.builder = None  # type: Gtk.Builder
         self.window = None  # type: Gtk.ApplicationWindow
         self.webview = None  # type: WebKit2.WebView
@@ -55,9 +63,9 @@ class App(Gtk.Application):
             # Windows are associated with the application
             # when the last one is closed the application shuts down
             self.initialize_builder()
-            # self.builder.connect_signals({
-            #     'on_load_button_clicked': self.load,
-            # })
+            self.builder.connect_signals({
+                'on_button_clicked': self.on_button_clicked,
+            })
 
             self.initialize_tree_view()
             self.initialize_source_view()
@@ -89,7 +97,6 @@ class App(Gtk.Application):
         ui.sourceview.SourceHandler(
             bus=self.bus,
             controller=self.controller,
-            notebook_storage=self.notebook_storage,
             source_view=source_view
         )
 
@@ -109,8 +116,11 @@ class App(Gtk.Application):
             tree_store=tree_store,
             tree_view=tree_view)
 
-    def load(self, *args, **kwargs):
+    def load(self):
         self.controller.load_notebook()
+
+    def on_button_clicked(self, *args, **kwargs):
+        self.controller.save()
 
         # def load_individual_node(self):
         #     data = 'bla'

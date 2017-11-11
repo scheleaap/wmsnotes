@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# TODO: Rename to "Note"
 from notebook.aggregate import NotebookNode
 
 __all__ = [

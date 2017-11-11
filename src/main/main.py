@@ -15,15 +15,12 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0')
 gi.require_version('WebKit2', '3.0')
 from gi.repository import Gio, GObject, Gtk, GtkSource, WebKit2
-import markdown
-from markdown.extensions.toc import TocExtension
-from markdown.extensions.sane_lists import SaneListExtension
-from pymdownx.github import GithubExtension
 
 from application.controller import Controller
 from notebook.storage.simple_fs import SimpleFileSystemStorage
 import ui.sourceview
 import ui.treeview
+import ui.webview
 import ui.window
 
 
@@ -52,7 +49,6 @@ class App(Gtk.Application):
         self.controller = Controller(self.note_repository, self.bus)
         self.builder = None  # type: Gtk.Builder
         self.window = None  # type: Gtk.ApplicationWindow
-        self.webview = None  # type: WebKit2.WebView
 
     #    def do_startup(self):
     #        super().do_startup()
@@ -69,9 +65,7 @@ class App(Gtk.Application):
 
             self.initialize_tree_view()
             self.initialize_source_view()
-            # self.webview = WebKit2.WebView()
-            # box = self.builder.get_object('split_pane2')
-            # box.add2(self.webview)
+            self.initialize_web_view()
 
             self.window = self.builder.get_object('main-window')  # type: Gtk.ApplicationWindow
             self.window.show_all()
@@ -117,23 +111,20 @@ class App(Gtk.Application):
             tree_view=tree_view)
         ui.treeview.SaneExpandCollapseTreeViewHandler(tree_view=tree_view)
 
+    def initialize_web_view(self):
+        webview = WebKit2.WebView()
+        box = self.builder.get_object('split_pane2')
+        box.add2(webview)
+        ui.webview.WebViewHandler(
+            bus=self.bus,
+            controller=self.controller,
+            web_view=webview)
+
     def load(self):
         self.controller.load_notebook()
 
     def on_button_clicked(self, *args, **kwargs):
         self.controller.save()
-
-        # def load_individual_node(self):
-        #     data = 'bla'
-        #
-        #     html = markdown.markdown(
-        #         data,
-        #         tab_length=2,
-        #         extensions=[GithubExtension(), SaneListExtension(), TocExtension()],
-        #         output_format='html5',
-        #     )
-        #     # self.webview.load_uri('file:///D:/Users/Wout/Programma\'s/Python/test/test.html')
-        #     self.webview.load_html(html, base_uri='file:///D:/Users/Wout/Programma\'s/Python/test/')
 
 
 if __name__ == '__main__':

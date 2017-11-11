@@ -3,7 +3,7 @@
 import logging
 
 import cyrusbus
-from gi.repository import Gtk
+from gi.repository import Gdk, Gtk
 
 from application.controller import NoteOpened, Controller
 from application.event import APPLICATION_TOPIC, NODE_EVENTS_TOPIC
@@ -127,6 +127,52 @@ class NoteCreatedHandler(object):
                 title=event.node.title
             )
         )
+
+
+class SaneExpandCollapseTreeViewHandler(object):
+    def __init__(self, tree_view: Gtk.TreeView):
+        self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__))
+        tree_view.connect('key-press-event', self.on_key_press_event)
+
+    def get_selected_item_path(self, tree_view: Gtk.TreeView, tree_model: Gtk.TreeModel):
+        (selected_item_path, _) = tree_view.get_cursor()
+        if selected_item_path is not None:
+            selected_item_iter = tree_model.get_iter(selected_item_path)
+        else:
+            tree_selection = tree_view.get_selection()  # type: Gtk.TreeSelection
+            (_, selected_item_iter) = tree_selection.get_selected()  # type: Gtk.TreeModel, Gtk.TreeIter
+            selected_item_path = tree_model.get_path(selected_item_iter)
+        return selected_item_iter, selected_item_path
+
+    def on_key_press_event(self, tree_view: Gtk.TreeView, event: Gdk.EventKey):
+        if (event.keyval == Gdk.KEY_Right or event.keyval == Gdk.KEY_KP_Right) and event.state == 0:
+            self.on_key_right(tree_view)
+        elif (event.keyval == Gdk.KEY_Left or event.keyval == Gdk.KEY_KP_Left) and event.state == 0:
+            self.on_key_left(tree_view)
+
+    def on_key_left(self, tree_view):
+        tree_model = tree_view.get_model()  # type: Gtk.TreeModel
+        selected_item_iter, selected_item_path = \
+            self.get_selected_item_path(tree_view, tree_model)  # type: Gtk.TreeIter, Gtk.TreePath
+        if tree_view.row_expanded(selected_item_path):
+            tree_view.collapse_row(selected_item_path)
+        else:
+            parent_iter = tree_model.iter_parent(selected_item_iter)
+            if parent_iter is not None:
+                parent_path = tree_model.get_path(parent_iter)
+                tree_view.set_cursor(parent_path)
+
+    def on_key_right(self, tree_view):
+        tree_model = tree_view.get_model()  # type: Gtk.TreeModel
+        selected_item_iter, selected_item_path = \
+            self.get_selected_item_path(tree_view, tree_model)  # type: Gtk.TreeIter, Gtk.TreePath
+
+        if not tree_view.row_expanded(selected_item_path):
+            tree_view.expand_row(selected_item_path, open_all=False)
+        elif tree_model.iter_has_child(selected_item_iter):
+            first_child_iter = tree_model.iter_children(selected_item_iter)  # type: Gtk.TreeIter
+            first_child_path = tree_model.get_path(first_child_iter)
+            tree_view.set_cursor(first_child_path)
 
 
 class NotebookTreeViewHandler(object):

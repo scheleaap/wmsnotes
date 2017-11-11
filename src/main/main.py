@@ -115,6 +115,7 @@ class App(Gtk.Application):
             controller=self.controller,
             tree_store=tree_store,
             tree_view=tree_view)
+        ui.treeview.SaneExpandCollapseTreeViewHandler(tree_view=tree_view)
 
     def load(self):
         self.controller.load_notebook()

@@ -3,6 +3,8 @@
 
 from collections import namedtuple
 
+import os
+
 __all__ = [
     'NotebookNode',
 ]
@@ -38,7 +40,7 @@ class FolderPath(object):
             if stripped_string_path == '':
                 return FolderPath([])
             else:
-                return FolderPath(stripped_string_path.split('/'))
+                return FolderPath(stripped_string_path.split(os.sep))
 
     def __init__(self, elements):
         self.elements = elements

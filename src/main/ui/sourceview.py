@@ -26,8 +26,15 @@ class SourceHandler(object):
         self.source_buffer = source_view.get_buffer()  # type: GtkSource.Buffer
         self.current_node_id = None
 
+        self.clear()
         self._on_buffer_changed_handler_id = self.source_buffer.connect('changed', self.on_buffer_changed)
         bus.subscribe(application.event.APPLICATION_TOPIC, self.on_application_event)
+
+    def clear(self):
+        self.current_node_id = None
+        self.source_buffer.set_text('')
+        self.source_view.set_sensitive(False)
+        self.source_view.hide()
 
     def on_application_event(self, bus, event):
         self.log.debug(u'Event received: {event}'.format(event=event))
@@ -35,15 +42,9 @@ class SourceHandler(object):
         if isinstance(event, NoteOpened):  # type: NoteOpened
             with self.source_buffer.handler_block(self._on_buffer_changed_handler_id):
                 if event.node is not None:
-                    self.current_node_id = event.node.node_id
-                    self.source_buffer.set_text(event.payload)
-                    self.source_buffer.begin_not_undoable_action()
-                    self.source_buffer.end_not_undoable_action()
-                    self.source_view.set_sensitive(True)
+                    self.set_note(event)
                 else:
-                    self.current_node_id = None
-                    self.source_buffer.set_text('')
-                    self.source_view.set_sensitive(False)
+                    self.clear()
         else:
             self.log.debug(u'Unhandled event: {event}'.format(event=event))
 
@@ -54,3 +55,11 @@ class SourceHandler(object):
             include_hidden_chars=False,
         )
         self.controller.update_node_payload(self.current_node_id, payload)
+
+    def set_note(self, event: NoteOpened):
+        self.current_node_id = event.node.node_id
+        self.source_buffer.set_text(event.node.payload)
+        self.source_buffer.begin_not_undoable_action()
+        self.source_buffer.end_not_undoable_action()
+        self.source_view.set_sensitive(True)
+        self.source_view.show()

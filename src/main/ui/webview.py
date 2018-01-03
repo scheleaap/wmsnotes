@@ -25,23 +25,33 @@ class WebViewHandler(object):
         self.controller = controller
         self.web_view = web_view
 
+        self.clear()
         bus.subscribe(application.event.APPLICATION_TOPIC, self.on_application_event)
+
+    def clear(self):
+        self.web_view.hide()
 
     def on_application_event(self, bus, event):
         self.log.debug(u'Event received: {event}'.format(event=event))
 
         if isinstance(event, NoteOpened):  # type: NoteOpened
-            html = markdown.markdown(
-                event.node.payload,
-                tab_length=2,
-                extensions=[GithubExtension(), SaneListExtension(), TocExtension()],
-                output_format='html5',
-            )
-            # self.webview.load_uri('file:///D:/Users/.../test.html')
-            self.web_view.load_html(
-                html,
-                # base_uri='file:///D:/Users/.../Python/test/'
-            )
-
+            if event.node is not None:
+                self.set_note(event)
+            else:
+                self.clear()
         else:
             self.log.debug(u'Unhandled event: {event}'.format(event=event))
+
+    def set_note(self, event):
+        html = markdown.markdown(
+            event.node.payload,
+            tab_length=2,
+            extensions=[GithubExtension(), SaneListExtension(), TocExtension()],
+            output_format='html5',
+        )
+        # self.webview.load_uri('file:///D:/Users/.../test.html')
+        self.web_view.load_html(
+            html,
+            # base_uri='file:///D:/Users/.../Python/test/'
+        )
+        self.web_view.show()

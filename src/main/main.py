@@ -68,7 +68,8 @@ class App(Gtk.Application):
             self.initialize_web_view()
 
             self.window = self.builder.get_object('main-window')  # type: Gtk.ApplicationWindow
-            self.window.show_all()
+            # self.window.maximize()
+            # self.window.show_all()
             self.add_window(self.window)
 
             self.window.set_focus(self.builder.get_object('tree_view'))

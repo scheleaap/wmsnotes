@@ -9,6 +9,7 @@ from pymdownx.github import GithubExtension
 
 import application.event
 from application.controller import NoteOpened, Controller
+from notebook.aggregate import NotePayloadChanged
 
 
 class WebViewHandler(object):
@@ -26,25 +27,28 @@ class WebViewHandler(object):
         self.web_view = web_view
 
         self.clear()
-        bus.subscribe(application.event.APPLICATION_TOPIC, self.on_application_event)
+        bus.subscribe(application.event.APPLICATION_TOPIC, self.on_event)
+        bus.subscribe(application.event.NODE_EVENTS_TOPIC, self.on_event)
 
     def clear(self):
         self.web_view.hide()
 
-    def on_application_event(self, bus, event):
+    def on_event(self, bus, event):
         self.log.debug(u'Event received: {event}'.format(event=event))
 
         if isinstance(event, NoteOpened):  # type: NoteOpened
             if event.node is not None:
-                self.set_note(event)
+                self.set_note(event.node.payload)
             else:
                 self.clear()
+        elif isinstance(event, NotePayloadChanged): # type: NotePayloadChanged
+            self.set_note(event.new_payload)
         else:
             self.log.debug(u'Unhandled event: {event}'.format(event=event))
 
-    def set_note(self, event):
+    def set_note(self, payload):
         html = markdown.markdown(
-            event.node.payload,
+            payload,
             tab_length=2,
             extensions=[GithubExtension(), SaneListExtension(), TocExtension()],
             output_format='html5',

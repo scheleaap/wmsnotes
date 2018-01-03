@@ -7,11 +7,8 @@ import application.event
 from application.controller import NoteOpened
 
 
-class MainWindowHandler(object):
-    """Connects and controls a Gtk.Window.
-
-    - Window title
-    """
+class WindowTitleHandler(object):
+    """Controls the title of a Gtk.Window."""
 
     def __init__(
             self,

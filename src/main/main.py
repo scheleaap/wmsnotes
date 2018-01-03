@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import io
 import logging
+import os
 import sys
 
 import cyrusbus
@@ -17,7 +17,9 @@ gi.require_version('WebKit2', '3.0')
 from gi.repository import Gio, GObject, Gtk, GtkSource, WebKit2
 
 from application.controller import Controller
+from application.settings import SettingsController, SettingsRepository
 from notebook.storage.simple_fs import SimpleFileSystemStorage
+import ui.layout
 import ui.sourceview
 import ui.treeview
 import ui.webview
@@ -47,6 +49,7 @@ class App(Gtk.Application):
             StorageNoteRepository(SimpleFileSystemStorage('resources/notebook')),
         )
         self.controller = Controller(self.note_repository, self.bus)
+        self.settings_controller = SettingsController(SettingsRepository(os.path.expanduser('~/.wmsnotes.cfg')), self.bus)
         self.builder = None  # type: Gtk.Builder
         self.window = None  # type: Gtk.ApplicationWindow
 
@@ -72,8 +75,18 @@ class App(Gtk.Application):
             # self.window.show_all()
             self.add_window(self.window)
 
+            main_split_pane = self.builder.get_object('main_split_pane')  # type: Gtk.Paned
+            editor_viewer_split_pane = self.builder.get_object('editor_viewer_split_pane')  # type: Gtk.Paned
+
             self.window.set_focus(self.builder.get_object('tree_view'))
-            ui.window.MainWindowHandler(self.bus, self.window)
+
+            ui.window.WindowTitleHandler(self.bus, self.window)
+            ui.layout.LayoutHandler(
+                bus=self.bus,
+                settings_controller=self.settings_controller,
+                window=self.window,
+                main_split_pane=main_split_pane,
+                editor_viewer_split_pane=editor_viewer_split_pane)
 
             self.load()
 
@@ -122,6 +135,7 @@ class App(Gtk.Application):
             web_view=webview)
 
     def load(self):
+        self.settings_controller.load_settings()
         self.controller.load_notebook()
 
     def on_button_clicked(self, *args, **kwargs):

@@ -113,8 +113,8 @@ class App(Gtk.Application):
 
     def initialize_web_view(self):
         webview = WebKit2.WebView()
-        box = self.builder.get_object('split_pane2')
-        box.add2(webview)
+        parent = self.builder.get_object('viewer_frame')  # type: Gtk.Frame
+        parent.add(webview)
         ui.webview.WebViewHandler(
             bus=self.bus,
             controller=self.controller,

@@ -14,7 +14,12 @@
       <object class="GtkBox" id="box2">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="margin_left">8</property>
+        <property name="margin_right">8</property>
+        <property name="margin_top">8</property>
+        <property name="margin_bottom">8</property>
         <property name="orientation">vertical</property>
+        <property name="spacing">8</property>
         <child>
           <object class="GtkButton" id="button1">
             <property name="label" translatable="yes">Just Do It!</property>
@@ -33,7 +38,9 @@
           <object class="GtkPaned" id="main_split_pane">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="has_tooltip">True</property>
             <property name="position">300</property>
+            <property name="wide_handle">True</property>
             <child>
               <object class="GtkScrolledWindow" id="tree_view_scroll">
                 <property name="visible">True</property>
@@ -57,15 +64,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkPaned" id="split_pane2">
+              <object class="GtkPaned" id="viewer_editor_split_pane">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="position">100</property>
+                <property name="position_set">True</property>
+                <property name="wide_handle">True</property>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <object class="GtkScrolledWindow" id="scrolledwindow2">
+                  <object class="GtkScrolledWindow" id="editor_scroll">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="shadow_type">in</property>
@@ -78,6 +84,24 @@
                         <property name="show_line_numbers">True</property>
                         <property name="tab_width">4</property>
                       </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="resize">True</property>
+                    <property name="shrink">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkFrame" id="viewer_frame">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label_xalign">0</property>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child type="label_item">
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>

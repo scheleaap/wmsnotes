@@ -109,6 +109,7 @@ class App(Gtk.Application):
         )
 
     def initialize_tree_view(self):
+        # TODO Refactor setup of search
         tree_store = ui.treeview.NotebookTreeStore(self.bus)
 
         tree_view = self.builder.get_object('tree_view')  # type: Gtk.TreeView
@@ -117,6 +118,11 @@ class App(Gtk.Application):
         tree_view.append_column(column)
 
         tree_view.set_model(tree_store)
+
+        tree_search_entry = self.builder.get_object('tree_search_entry')  # type: Gtk.SearchEntry
+        tree_view.set_enable_search(True)
+        tree_view.set_search_column(2)
+        tree_view.set_search_entry(tree_search_entry)
 
         ui.treeview.NotebookTreeViewHandler(
             bus=self.bus,

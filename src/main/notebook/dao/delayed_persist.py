@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from notebook.aggregate import NotebookNode
+from notebook.aggregate import Note
 from notebook.dao import NoteRepository
-from notebook.storage import NodeDoesNotExistError
 
 
 class DelayedPersistNoteRepository(NoteRepository):
@@ -11,32 +10,32 @@ class DelayedPersistNoteRepository(NoteRepository):
     def __init__(self, repository1: NoteRepository, repository2: NoteRepository):
         self.repository1 = repository1
         self.repository2 = repository2
-        self.node_ids_added_or_updated = set()
-        self.node_ids_deleted = set()
+        self.note_ids_added_or_updated = set()
+        self.note_ids_deleted = set()
 
-    def add_or_update_node(self, node: NotebookNode):
-        self.repository1.add_or_update_node(node)
-        self.node_ids_added_or_updated.add(node.node_id)
+    def add_or_update_note(self, note: Note):
+        self.repository1.add_or_update_note(note)
+        self.note_ids_added_or_updated.add(note.note_id)
 
-    def get_all_nodes(self):
-        nodes1_ids = set()
-        for node in self.repository1.get_all_nodes():
-            nodes1_ids.add(node.node_id)
-            yield node
-        for node in self.repository2.get_all_nodes():
-            if node.node_id not in nodes1_ids:
-                yield node
+    def get_all_notes(self):
+        notes1_ids = set()
+        for note in self.repository1.get_all_notes():
+            notes1_ids.add(note.note_id)
+            yield note
+        for note in self.repository2.get_all_notes():
+            if note.note_id not in notes1_ids:
+                yield note
 
-    def get_node(self, node_id) -> NotebookNode:
-        if self.repository1.has_node(node_id):
-            return self.repository1.get_node(node_id)
+    def get_note(self, note_id) -> Note:
+        if self.repository1.has_note(note_id):
+            return self.repository1.get_note(note_id)
         else:
-            return self.repository2.get_node(node_id)
+            return self.repository2.get_note(note_id)
 
-    def has_node(self, node_id) -> bool:
-        return self.repository1.has_node(node_id) or \
-               self.repository2.has_node(node_id)
+    def has_note(self, note_id) -> bool:
+        return self.repository1.has_note(note_id) or \
+               self.repository2.has_note(note_id)
 
     def persist(self):
-        for node in self.repository1.get_all_nodes():
-            self.repository2.add_or_update_node(node)
+        for note in self.repository1.get_all_notes():
+            self.repository2.add_or_update_note(note)

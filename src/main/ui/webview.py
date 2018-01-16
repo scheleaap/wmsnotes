@@ -34,8 +34,8 @@ class WebViewHandler(object):
         self.log.debug(u'Event received: {event}'.format(event=event))
 
         if isinstance(event, NoteOpened):  # type: NoteOpened
-            if event.node is not None:
-                self.set_note(event.node.payload)
+            if event.note is not None:
+                self.set_note(event.note.payload)
             else:
                 self.clear()
         elif isinstance(event, NotePayloadChanged): # type: NotePayloadChanged

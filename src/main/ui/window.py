@@ -26,12 +26,12 @@ class WindowTitleHandler(object):
         self.log.debug(u'Event received: {event}'.format(event=event))
 
         if isinstance(event, NoteOpened):  # type: NoteOpened
-            self.set_title(event.node)
+            self.set_title(event.note)
         else:
             self.log.debug(u'Unhandled event: {event}'.format(event=event))
 
-    def set_title(self, node):
-        if node is not None:
-            self.window.set_title('WMS Notes - {title}'.format(title=node.title))
+    def set_title(self, note):
+        if note is not None:
+            self.window.set_title('WMS Notes - {title}'.format(title=note.title))
         else:
             self.window.set_title('WMS Notes')

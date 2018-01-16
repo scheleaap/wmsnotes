@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 
-from notebook.aggregate import NotebookNode
+from notebook.aggregate import Note
 from notebook.dao import NoteRepository
 from notebook.storage import NotebookStorage
 
@@ -13,22 +13,22 @@ class StorageNoteRepository(NoteRepository):
     def __init__(self, storage: NotebookStorage):
         self.storage = storage
 
-    def add_or_update_node(self, node: NotebookNode):
-        self.storage.set_node_payload(node.node_id, 'main', io.BytesIO(bytes(node.payload, encoding='utf-8')))
+    def add_or_update_note(self, note: Note):
+        self.storage.set_note_payload(note.note_id, 'main', io.BytesIO(bytes(note.payload, encoding='utf-8')))
 
-    def get_all_nodes(self):
-        for node in self.storage.get_all_nodes():
-            yield node
+    def get_all_notes(self):
+        for note in self.storage.get_all_notes():
+            yield note
 
-    def get_node(self, node_id) -> NotebookNode:
-        node = self.storage.get_node(node_id)
-        payload_file = self.storage.get_node_payload(node_id, 'main')
+    def get_note(self, note_id) -> Note:
+        note = self.storage.get_note(note_id)
+        payload_file = self.storage.get_note_payload(note_id, 'main')
         try:
             # TODO
-            node._payload = str(payload_file.read(), encoding='utf-8')
+            note._payload = str(payload_file.read(), encoding='utf-8')
         finally:
             payload_file.close()
-        return node
+        return note
 
-    def has_node(self, node_id) -> bool:
-        return self.storage.has_node(node_id)
+    def has_note(self, note_id) -> bool:
+        return self.storage.has_note(note_id)

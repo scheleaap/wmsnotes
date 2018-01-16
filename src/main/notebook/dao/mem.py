@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from notebook.aggregate import NotebookNode
+from notebook.aggregate import Note
 from notebook.dao import NoteRepository
-from notebook.storage import NodeDoesNotExistError
+from notebook.storage import NoteDoesNotExistError
 
 
 class InMemoryNoteRepository(NoteRepository):
@@ -11,17 +11,17 @@ class InMemoryNoteRepository(NoteRepository):
     def __init__(self):
         self.notes = dict()
 
-    def add_or_update_node(self, node: NotebookNode):
-        self.notes[node.node_id] = node
+    def add_or_update_note(self, note: Note):
+        self.notes[note.note_id] = note
 
-    def get_all_nodes(self):
-        for node in self.notes.values():
-            yield node
+    def get_all_notes(self):
+        for note in self.notes.values():
+            yield note
 
-    def get_node(self, node_id) -> NotebookNode:
-        if not self.has_node(node_id):
-            raise NodeDoesNotExistError
-        return self.notes[node_id]
+    def get_note(self, note_id) -> Note:
+        if not self.has_note(note_id):
+            raise NoteDoesNotExistError
+        return self.notes[note_id]
 
-    def has_node(self, node_id) -> bool:
-        return node_id in self.notes
+    def has_note(self, note_id) -> bool:
+        return note_id in self.notes

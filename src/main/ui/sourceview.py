@@ -4,13 +4,13 @@ import cyrusbus
 from gi.repository import GtkSource
 
 from application.event import APPLICATION_TOPIC
-from application.note import NoteOpened, UpdateNodePayloadCommand
+from application.note import NoteOpened, UpdateNotePayloadCommand
 
 
 class SourceHandler(object):
     """Connects and controls a GtkSource.View and a GtkSource.Buffer.
 
-    @ivar current_node_id: The id of the current node.
+    @ivar current_note_id: The id of the current note.
     """
 
     def __init__(
@@ -22,14 +22,14 @@ class SourceHandler(object):
         self.bus = bus
         self.source_view = source_view
         self.source_buffer = source_view.get_buffer()  # type: GtkSource.Buffer
-        self.current_node_id = None
+        self.current_note_id = None
 
         self.clear()
         self._on_buffer_changed_handler_id = self.source_buffer.connect('changed', self.on_buffer_changed)
         self.bus.subscribe(APPLICATION_TOPIC, self.on_application_event)
 
     def clear(self):
-        self.current_node_id = None
+        self.current_note_id = None
         self.source_buffer.set_text('')
         self.source_view.set_sensitive(False)
         self.source_view.hide()
@@ -39,7 +39,7 @@ class SourceHandler(object):
 
         if isinstance(event, NoteOpened):  # type: NoteOpened
             with self.source_buffer.handler_block(self._on_buffer_changed_handler_id):
-                if event.node is not None:
+                if event.note is not None:
                     self.set_note(event)
                 else:
                     self.clear()
@@ -52,14 +52,14 @@ class SourceHandler(object):
             self.source_buffer.get_end_iter(),
             include_hidden_chars=False,
         )
-        self._publish(UpdateNodePayloadCommand(self.current_node_id, payload))
+        self._publish(UpdateNotePayloadCommand(self.current_note_id, payload))
 
     def _publish(self, object):
         self.bus.publish(APPLICATION_TOPIC, object)
 
     def set_note(self, event: NoteOpened):
-        self.current_node_id = event.node.node_id
-        self.source_buffer.set_text(event.node.payload)
+        self.current_note_id = event.note.note_id
+        self.source_buffer.set_text(event.note.payload)
         self.source_buffer.begin_not_undoable_action()
         self.source_buffer.end_not_undoable_action()
         self.source_view.set_sensitive(True)

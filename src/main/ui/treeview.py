@@ -7,14 +7,14 @@ from gi.repository import Gdk, Gtk
 
 from application.note import NoteOpened, OpenNoteCommand
 from application.event import APPLICATION_TOPIC
-from notebook.aggregate import NoteCreated, FolderPath, NotebookNode
+from notebook.aggregate import NoteCreated, FolderPath, Note
 
 __all__ = [
     'NotebookTreeStore',
 ]
 
-CONTENT_NODE_TYPE = 'content-node'
-FOLDER_NODE_TYPE = 'folder-node'
+NOTE_TYPE = 'note'
+FOLDER_TYPE = 'folder'
 
 
 class NotebookTreeStore(Gtk.TreeStore):
@@ -23,18 +23,18 @@ class NotebookTreeStore(Gtk.TreeStore):
             str,  # type
             str,  # path element
             str,  # title
-            str,  # node_id (only if type == CONTENT_NODE_TYPE)
+            str,  # note_id (only if type == NOTE_TYPE)
         )
         self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__))
         bus.subscribe(APPLICATION_TOPIC, self.on_event)
 
     @staticmethod
-    def create_folder_node_row(path_element: str, title: str):
-        return [FOLDER_NODE_TYPE, path_element, title, None]
+    def create_folder_row(path_element: str, title: str):
+        return [FOLDER_TYPE, path_element, title, None]
 
     @staticmethod
-    def create_content_node_row(node_id: str, path_element: str, title: str):
-        return [CONTENT_NODE_TYPE, path_element, title, node_id]
+    def create_note_row(note_id: str, path_element: str, title: str):
+        return [NOTE_TYPE, path_element, title, note_id]
 
     def ensure_folder_exists_and_return_iter(self, remaining_path_elements, parent_iter: Gtk.TreeIter = None):
         if len(remaining_path_elements) == 0:
@@ -57,7 +57,7 @@ class NotebookTreeStore(Gtk.TreeStore):
             if current_child_iter is None:
                 current_child_iter = self.append(
                     parent_iter,
-                    self.create_folder_node_row(
+                    self.create_folder_row(
                         path_element=current_path_element,
                         title=current_path_element
                     )
@@ -94,16 +94,16 @@ class NotebookTreeStore(Gtk.TreeStore):
             else:
                 raise RuntimeError('Path not found')
 
-    def get_node_id_from_iter(self, iter: Gtk.TreeIter):
+    def get_note_id_from_iter(self, iter: Gtk.TreeIter):
         return self.get(iter, 3)[0]
 
     @staticmethod
-    def get_path_elements_for_content_node_from_notebook_node(node: NotebookNode):
-        return node.folder_path.elements + [node.title]
+    def get_path_elements_for_note_from_note(note: Note):
+        return note.folder_path.elements + [note.title]
 
     @staticmethod
-    def get_path_elements_for_folder_node_from_notebook_node(node: NotebookNode):
-        return node.folder_path.elements
+    def get_path_elements_for_folder_from_note(note: Note):
+        return note.folder_path.elements
 
     def on_event(self, bus, event, *args, **kwargs):
         self.log.debug(u'Event received: {event}'.format(event=event))
@@ -118,13 +118,13 @@ class NoteCreatedHandler(object):
     @staticmethod
     def handle(tree_store: NotebookTreeStore, event: NoteCreated):
         parent_iter = tree_store.ensure_folder_exists_and_return_iter(
-            NotebookTreeStore.get_path_elements_for_folder_node_from_notebook_node(event.node))
+            NotebookTreeStore.get_path_elements_for_folder_from_note(event.note))
         tree_store.append(
             parent_iter,
-            NotebookTreeStore.create_content_node_row(
-                node_id=event.node.node_id,
-                path_element=event.node.title,
-                title=event.node.title
+            NotebookTreeStore.create_note_row(
+                note_id=event.note.note_id,
+                path_element=event.note.title,
+                title=event.note.title
             )
         )
 
@@ -196,7 +196,7 @@ class NotebookTreeViewHandler(object):
     #
     #     if isinstance(event, NoteOpened):  # type: NoteOpened
     #         self.tree_store.get_iter_from_path_elements(
-    #             NotebookTreeStore.get_path_elements_for_content_node_from_notebook_node(event.node))
+    #             NotebookTreeStore.get_path_elements_for_note_from_note(event.note))
     #     else:
     #         self.log.debug(u'Unhandled event: {event}'.format(event=event))
 
@@ -204,10 +204,10 @@ class NotebookTreeViewHandler(object):
         self.log.debug(u'Selection changed')
         (tree_model, iter) = tree_selection.get_selected()  # type: NotebookTreeStore, Gtk.TreeIter
         if iter is not None:
-            node_id = tree_model.get_node_id_from_iter(iter)
+            note_id = tree_model.get_note_id_from_iter(iter)
         else:
-            node_id = None
-        self._publish(OpenNoteCommand(node_id))
+            note_id = None
+        self._publish(OpenNoteCommand(note_id))
 
     def _publish(self, object):
         self.bus.publish(APPLICATION_TOPIC, object)

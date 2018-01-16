@@ -3,16 +3,16 @@ import logging
 
 import cyrusbus.bus
 
-from notebook.aggregate import NotebookNode
+from notebook.aggregate import Note
 from .event import APPLICATION_TOPIC
 
 
-class FolderOpened(object):
-    def __init__(self, node: NotebookNode):
-        self.node = node
-
-    def __repr__(self):
-        return '{cls}[{node}]'.format(cls=self.__class__.__name__, **self.__dict__)
+# class FolderOpened(object):
+#     def __init__(self, node: Note):
+#         self.node = node
+#
+#     def __repr__(self):
+#         return '{cls}[{node}]'.format(cls=self.__class__.__name__, **self.__dict__)
 
 
 class FolderService(object):
@@ -21,7 +21,7 @@ class FolderService(object):
         self.bus = bus
         bus.subscribe(APPLICATION_TOPIC, self.on_event)
 
-    def _publish_node_event(self, event):
+    def _publish_event(self, event):
         if event is not None:
             self.bus.publish(APPLICATION_TOPIC, event)
 

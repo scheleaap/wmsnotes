@@ -16,7 +16,8 @@ gi.require_version('GtkSource', '3.0')
 gi.require_version('WebKit2', '3.0')
 from gi.repository import Gio, GObject, Gtk, GtkSource, WebKit2
 
-from application.controller import Controller
+from application.folder import FolderService
+from application.note import NoteService
 from application.settings import SettingsController, SettingsRepository
 from notebook.storage.simple_fs import SimpleFileSystemStorage
 import ui.layout
@@ -48,8 +49,9 @@ class App(Gtk.Application):
             InMemoryNoteRepository(),
             StorageNoteRepository(SimpleFileSystemStorage('resources/notebook')),
         )
-        self.controller = Controller(self.note_repository, self.bus)
-        self.settings_controller = SettingsController(SettingsRepository(os.path.expanduser('~/.wmsnotes.cfg')), self.bus)
+        self.note_service = NoteService(self.note_repository, self.bus)
+        self.settings_controller = SettingsController(SettingsRepository(os.path.expanduser('~/.wmsnotes.cfg')),
+                                                      self.bus)
         self.builder = None  # type: Gtk.Builder
         self.window = None  # type: Gtk.ApplicationWindow
 
@@ -104,7 +106,6 @@ class App(Gtk.Application):
         buffer.set_language(markdown_language)
         ui.sourceview.SourceHandler(
             bus=self.bus,
-            controller=self.controller,
             source_view=source_view
         )
 
@@ -126,7 +127,6 @@ class App(Gtk.Application):
 
         ui.treeview.NotebookTreeViewHandler(
             bus=self.bus,
-            controller=self.controller,
             tree_store=tree_store,
             tree_view=tree_view)
         ui.treeview.SaneExpandCollapseTreeViewHandler(tree_view=tree_view)
@@ -137,15 +137,14 @@ class App(Gtk.Application):
         parent.add(webview)
         ui.webview.WebViewHandler(
             bus=self.bus,
-            controller=self.controller,
             web_view=webview)
 
     def load(self):
         self.settings_controller.load_settings()
-        self.controller.load_notebook()
+        self.note_service.load_notebook()
 
     def on_button_clicked(self, *args, **kwargs):
-        self.controller.save()
+        self.note_service.save()
 
 
 if __name__ == '__main__':

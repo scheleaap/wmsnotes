@@ -8,7 +8,7 @@ from markdown.extensions.sane_lists import SaneListExtension
 from pymdownx.github import GithubExtension
 
 import application.event
-from application.controller import NoteOpened, Controller
+from application.note import NoteOpened
 from notebook.aggregate import NotePayloadChanged
 
 
@@ -19,16 +19,13 @@ class WebViewHandler(object):
     def __init__(
             self,
             bus: cyrusbus.bus.Bus,
-            controller: Controller,
             web_view: WebKit2.WebView,
     ):
         self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__))
-        self.controller = controller
         self.web_view = web_view
 
         self.clear()
         bus.subscribe(application.event.APPLICATION_TOPIC, self.on_event)
-        bus.subscribe(application.event.NODE_EVENTS_TOPIC, self.on_event)
 
     def clear(self):
         self.web_view.hide()

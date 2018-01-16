@@ -4,7 +4,7 @@ import cyrusbus
 from gi.repository import Gtk
 
 import application.event
-from application.controller import NoteOpened
+from application.note import NoteOpened
 
 
 class WindowTitleHandler(object):

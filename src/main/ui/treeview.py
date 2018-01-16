@@ -5,8 +5,8 @@ import logging
 import cyrusbus
 from gi.repository import Gdk, Gtk
 
-from application.controller import NoteOpened, Controller
-from application.event import APPLICATION_TOPIC, NODE_EVENTS_TOPIC
+from application.note import NoteOpened, OpenNoteCommand
+from application.event import APPLICATION_TOPIC
 from notebook.aggregate import NoteCreated, FolderPath, NotebookNode
 
 __all__ = [
@@ -26,7 +26,7 @@ class NotebookTreeStore(Gtk.TreeStore):
             str,  # node_id (only if type == CONTENT_NODE_TYPE)
         )
         self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__))
-        bus.subscribe(NODE_EVENTS_TOPIC, self.on_event)
+        bus.subscribe(APPLICATION_TOPIC, self.on_event)
 
     @staticmethod
     def create_folder_node_row(path_element: str, title: str):
@@ -179,13 +179,12 @@ class NotebookTreeViewHandler(object):
     def __init__(
             self,
             bus: cyrusbus.bus.Bus,
-            controller: Controller,
             tree_store: NotebookTreeStore,
             tree_view: Gtk.TreeView,
             **kwargs):
 
         self.log = logging.getLogger('{m}.{c}'.format(m=self.__class__.__module__, c=self.__class__.__name__))
-        self.controller = controller
+        self.bus = bus
         # self.tree_store = tree_store
         self.tree_view = tree_view
 
@@ -208,4 +207,7 @@ class NotebookTreeViewHandler(object):
             node_id = tree_model.get_node_id_from_iter(iter)
         else:
             node_id = None
-        self.controller.set_open_node(node_id)
+        self._publish(OpenNoteCommand(node_id))
+
+    def _publish(self, object):
+        self.bus.publish(APPLICATION_TOPIC, object)

@@ -79,7 +79,6 @@ class LayoutHandler(object):
         self.settings_controller.update_and_save(f)
 
     def on_window_state_changed(self, _, event: Gdk.EventWindowState):
-        print(event.changed_mask & Gdk.WindowState.MAXIMIZED)
         if event.changed_mask & Gdk.WindowState.MAXIMIZED:
             def f(settings: Settings):
                 if event.new_window_state & Gdk.WindowState.MAXIMIZED:
